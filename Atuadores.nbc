@@ -1,0 +1,30 @@
+/*definição de constante*/
+#define DECREMENT 25
+#define SPEED 100
+#define WAIT_TIME 2000
+
+/*Definição de segmentos de variaveis(Todas são globais)*/
+dseg segment
+    Speed byte
+    ZeroRandom byte
+dseg ends
+
+thread main
+    set Speed SPEED //Atribui valor a Speed
+    OnFwd(OUT_BC,Speed)   //Ambos motores indo para frente(Iterface,velocidade)
+    wait WAIT_TIME   //Espera 2 segudnos
+    sub Speed, Speed, DECREMENT
+    Random(ZeroRandom,2)    //Sorteia um numero entre 0 e 2(2 não incluido)
+    brtst EQ, Then, ZeroRandom  //testa se o valor sorteado é igual(EQ) a 0 se for pula pra branch Then
+Else:
+    OnRev(OUT_BC,Speed)   //Ambos motores no sentido inverso
+    jmp EndIf   //salto incondicional
+Then:
+    OnFwd(OUT_BC,Speed)
+EndIf:
+    wait WAIT_TIME
+    Off(OUT_BC) //Desligando ambos os motores
+    exit
+endt
+
+

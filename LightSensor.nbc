@@ -1,0 +1,13 @@
+dseg segment
+    ColorLvl sword 0
+dseg ends
+
+thread main
+    SetSensorLight(IN_3)
+
+CheckSensor:
+    ReadSensor(IN_3, ColorLvl)
+    NumOut(100, 8, ColorLvl)
+    wait 1000
+    jmp CheckSensor
+endt
