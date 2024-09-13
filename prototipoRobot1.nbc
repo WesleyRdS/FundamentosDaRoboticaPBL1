@@ -1,0 +1,77 @@
+#define OBSTACLE_DISTANCE 20
+
+dseg segment
+	Distance sword 4
+	CheckedSections byte 4
+	motor_control mutex
+dseg ends
+
+
+thread main
+	precedes run, readLocal, rotateSensorA, rotateSensorB, Curve 
+	SetSensorUltrasonic(IN_4)
+endt
+
+thread run
+foward:
+	acquire motor_control
+	OnFwdReg(OUT_BC, 100,OUT_REGMODE_SYNC+OUT_REGMODE_SPEED)
+	release motor_control
+	brcmp GT,foward,Distance,OBSTACLE_DISTANCE
+endt
+
+thread curve
+	brcmp EQ, Exit,CheckedSections, 0
+	acquire motor_control
+CurveLoop:
+	OnRev(OUT_C,100)
+	wait 200
+	set CheckedSections 0
+	brcmp EQ, CurveLoop,CheckedSections, 3
+	release motor_control
+Exit:
+endt
+
+thread readLocal
+while:
+	ReadSensor(IN_4, Distance)
+	jmp while
+endt
+
+thread rotateSonarA
+	brcmp GT,exit,Distance,OBSTACLE_DISTANCE
+	add CheckedSections, CheckedSections, 1
+	acquire motor_control
+	RotateMotor(OUT_C,0,-360)
+	wait 50
+	RotateMotor(OUT_C,-360,0)
+	wait 50
+	RotateMotor(OUT_C,0,360)
+	wait 50
+	brcmp GT,exit,Distance,OBSTACLE_DISTANCE
+        add CheckedSections, CheckedSections, 1
+	RotateMotor(OUT_C,360,0)
+	wait 50
+
+exit:
+	release motor_control
+endt
+
+
+thread rotateSonarB
+	brcmp LT,exit,Distance,OBSTACLE_DISTANCE
+	acquire motor_control
+	RotateMotor(OUT_B,0,360)
+	wait 50
+	brcmp GT,exit,Distance,OBSTACLE_DISTANCE
+        add CheckedSections, CheckedSections, 1	
+	RotateMotor(OUT_B,360,0)
+	wait 50
+	RotateMotor(OUT_B,0,-360)
+	wait 50
+	RotateMotor(OUT_B,-360,0)
+	wait 50
+exit:
+	release motor_control
+endt
+
